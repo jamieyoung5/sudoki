@@ -1,4 +1,4 @@
-package display
+package canvas
 
 import (
 	"strings"

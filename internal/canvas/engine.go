@@ -1,9 +1,9 @@
-package display
+package canvas
 
 import (
 	"bufio"
 	"fmt"
-	go_strc "github.com/jamieyoung5/go-strc"
+	gostrc "github.com/jamieyoung5/go-strc"
 	"os"
 	"strings"
 	"sudoki/internal/term"
@@ -11,30 +11,30 @@ import (
 
 type Component interface {
 	GetDimensions() (height int, width int)
-	Print(pointer *Cursor)
-	Serialize(pointer *Cursor) string
-	Select(pointer *Cursor, macro string) (state *Screen, exit bool)
+	Print(cursor *Cursor)
+	Serialize(cursor *Cursor) string
+	Select(cursor *Cursor, macro string) (screen *Screen, exit bool)
 }
 
 type ViewComponent struct {
-	cursor    *Cursor
-	component Component
+	Cursor    *Cursor
+	Component Component
 }
 
 func (vc *ViewComponent) Serialize() string {
-	return vc.component.Serialize(vc.cursor)
+	return vc.Component.Serialize(vc.Cursor)
 }
 
 type Screen struct {
-	views   [][]*ViewComponent
-	cursors []*Cursor
+	Views   [][]*ViewComponent
+	Cursors []*Cursor
 	Persist bool
 }
 
 func (s *Screen) Serialize() string {
 	var builder strings.Builder
 
-	for _, row := range s.views {
+	for _, row := range s.Views {
 		var items []string
 		for _, componentNode := range row {
 			items = append(items, componentNode.Serialize())
@@ -48,18 +48,18 @@ func (s *Screen) Serialize() string {
 }
 
 type InteractiveCanvas struct {
-	Screens *go_strc.Stack[*Screen]
+	Screens *gostrc.Stack[*Screen]
 }
 
 func NewInteractiveCanvas(screen *Screen) *InteractiveCanvas {
-	screenStack := go_strc.NewStack[*Screen]()
+	screenStack := gostrc.NewStack[*Screen]()
 	screenStack.Push(screen)
 
 	return &InteractiveCanvas{screenStack}
 }
 
 func (ic *InteractiveCanvas) Draw() {
-	fmt.Print("\033[H\033[2J\033[3J")
+	term.Clear()
 	screen := ic.Screens.Peek()
 
 	fmt.Printf(screen.Serialize())
@@ -73,11 +73,6 @@ func (ic *InteractiveCanvas) Initiate() {
 		ic.Draw()
 
 		reader := bufio.NewReader(os.Stdin)
-
-		err := term.PrepareTerminal()
-		if err != nil {
-			break
-		}
 
 		ic.listenForInput(reader)
 	}
@@ -94,13 +89,13 @@ func (ic *InteractiveCanvas) listenForInput(reader *bufio.Reader) {
 		}
 
 		screen := ic.Screens.Peek()
-		for _, cursor := range screen.cursors {
+		for _, cursor := range screen.Cursors {
 			if cursor == nil {
 				continue
 			}
 
 			if macro, ok := cursor.controls[term.Encode(sequence)]; ok {
-				nextScreen, exit := screen.views[cursor.gridY][cursor.gridX].component.Select(cursor, macro)
+				nextScreen, exit := screen.Views[cursor.gridY][cursor.gridX].Component.Select(cursor, macro)
 				ic.Draw()
 
 				if exit {

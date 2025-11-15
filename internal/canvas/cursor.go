@@ -1,4 +1,4 @@
-package display
+package canvas
 
 type Cursor struct {
 	x, y, gridX, gridY int
@@ -14,6 +14,10 @@ func NewCursor(x, y, gridX, gridY int, controls map[string]string) *Cursor {
 		gridY:    gridY,
 		controls: controls,
 	}
+}
+
+func (c *Cursor) ToControl() {
+
 }
 
 func (c *Cursor) GetCoords() (x int, y int) {
