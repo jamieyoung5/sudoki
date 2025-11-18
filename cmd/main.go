@@ -35,8 +35,17 @@ func main() {
 	})
 	canvas.Initiate()*/
 
-	grid := canvas.NewGrid([][]int{
-		{1, 2, 3},
+	emptySymbols := &canvas.Symbols{
+		NoValue: ".",
+	}
+
+	subGrid, err := canvas.NewGrid(
+		[][]any{
+			{1, 2},
+		}, emptySymbols)
+
+	grid, err := canvas.NewGrid([][]any{
+		{subGrid, 2, 3},
 		{4, 5, 6},
 		{7, 8, 9},
 	}, canvas.WithGridSymbols())

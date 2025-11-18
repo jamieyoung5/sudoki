@@ -11,14 +11,14 @@ type Symbols struct {
 	NoValue             string
 }
 
-type Grid[T comparable] struct {
-	Content *Cell[T]
+type Grid struct {
+	Content *Cell
 	Symbols *Symbols
 }
 
-func NewGrid[T comparable](grid [][]T, symbols *Symbols) *Grid[T] {
+func NewGrid(grid [][]any, symbols *Symbols) (*Grid, error) {
 	if len(grid) == 0 || len(grid[0]) == 0 {
-		return &Grid[T]{}
+		return &Grid{}, nil
 	}
 	if symbols == nil {
 		symbols = &Symbols{}
@@ -26,12 +26,15 @@ func NewGrid[T comparable](grid [][]T, symbols *Symbols) *Grid[T] {
 
 	rows := len(grid)
 	cols := len(grid[0])
-	cellGrid := createGridCells[T](rows, cols, grid, symbols)
+	cellGrid, err := createGridCells(rows, cols, grid, symbols)
+	if err != nil {
+		return nil, err
+	}
 
-	return &Grid[T]{
+	return &Grid{
 		Content: cellGrid[0][0],
 		Symbols: symbols,
-	}
+	}, nil
 }
 
 func WithGridSymbols() *Symbols {
@@ -43,9 +46,9 @@ func WithGridSymbols() *Symbols {
 	}
 }
 
-func (g *Grid[T]) Render() string { return Render[T](g) }
+func (g *Grid) Render() string { return Render(g) }
 
-func (g *Grid[T]) RenderLines() []string {
+func (g *Grid) RenderLines() []string {
 	if g.Content == nil {
 		return []string{g.Symbols.NoValue}
 	}
@@ -148,16 +151,21 @@ func (g *Grid[T]) RenderLines() []string {
 	return output
 }
 
-func createGridCells[T comparable](rows int, cols int, grid [][]T, symbols *Symbols) [][]*Cell[T] {
-	cellGrid := make([][]*Cell[T], rows)
+func createGridCells(rows int, cols int, grid [][]any, symbols *Symbols) ([][]*Cell, error) {
+	cellGrid := make([][]*Cell, rows)
 	for r := 0; r < rows; r++ {
-		cellGrid[r] = make([]*Cell[T], cols)
+		cellGrid[r] = make([]*Cell, cols)
 		for c := 0; c < cols; c++ {
-			cellGrid[r][c] = &Cell[T]{
-				Value:   &grid[r][c],
-				SubGrid: nil,
-				Symbols: symbols,
+			cell := &Cell{Symbols: symbols}
+
+			element := grid[r][c]
+			if layout, ok := element.(Layout); ok {
+				cell.SubGrid = layout
+			} else {
+				cell.Value = element
 			}
+
+			cellGrid[r][c] = cell
 		}
 	}
 
@@ -174,5 +182,5 @@ func createGridCells[T comparable](rows int, cols int, grid [][]T, symbols *Symb
 		}
 	}
 
-	return cellGrid
+	return cellGrid, nil
 }

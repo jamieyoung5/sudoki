@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func Render[T comparable](l Layout[T]) string {
+func Render(l Layout) string {
 	if l == nil {
 		return ""
 	}
