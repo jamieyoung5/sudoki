@@ -18,7 +18,7 @@ func main() {
 	}
 	defer term.Restore(fd, origState)
 
-	cursor := canvas.NewCursor(0, 0, 0, 0, make(map[string]string))
+	/*cursor := canvas.NewCursor(0, 0, 0, 0, make(map[string]string))
 	grid := [][]*canvas.ViewComponent{
 		{
 			&canvas.ViewComponent{
@@ -33,7 +33,16 @@ func main() {
 		Cursors: []*canvas.Cursor{cursor},
 		Persist: false,
 	})
-	canvas.Initiate()
+	canvas.Initiate()*/
+
+	grid := canvas.NewGrid([][]int{
+		{1, 2, 3},
+		{4, 5, 6},
+		{7, 8, 9},
+	}, canvas.WithGridSymbols())
+
+	serializedGrid := grid.Render()
+	fmt.Println(serializedGrid)
 }
 
 type Test struct{}
